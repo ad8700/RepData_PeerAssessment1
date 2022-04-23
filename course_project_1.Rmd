@@ -5,3 +5,117 @@ author: Andy Domenico
 course: Reproducible Research
 ---
 
+Loading and preprocessing the data
+
+First, import any needed libraries.  
+
+```{r}
+echo=TRUE
+library(dplyr)
+library(ggplot2)
+library(data.table)
+library(readr)
+```
+We will need to download the data from the course website.  This should only need
+to be done once.  The URL and the date/time of download should be embedded in the
+workbook.  The data will be stored in a data directory.  If such a directory does
+not exist, the below code will create it.
+
+```{r}
+echo=TRUE
+if(!dir.exists("./data")) {
+  dir.create("./data")
+} else {
+  print("Data directory already exists")
+}
+```
+
+Now data can be downloaded and stored in the new data directory
+
+```{r}
+echo=TRUE
+fileUrl <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
+dest <- "./data/activity.zip"
+download.file(fileUrl, dest)
+
+#unzip the file
+unzip(dest, exdir="./data")
+
+print('Data retrieved from ', fileUrl)
+print('at ', Sys.time())
+
+```
+
+The data from the .csv file can now be read into a data frame.  This is raw data
+and will be explored.  We expect to transform the data 
+```{r}
+echo=TRUE
+raw_df <- read.csv("./data/activity.csv")
+```
+
+The first question to address is: "What is mean total number of steps taken per 
+day?"
+
+In order to answer that question, we need to examine the quality of the data.  
+Does it contain missing values or extreme outliers?  performing a simple head() 
+command reveals that there are indeed NA values.  For purposes of this analysis
+removing NA is acceptable.  
+
+Testing for outliers is as simple as looking at a summary and drawing a 
+histogram.  Let us start with a summary:
+
+```{r}
+echo = TRUE
+summary(raw_df$steps, rm.na=TRUE)
+```
+
+It seems that there are a lot of 0 values, if the median is 0.  Let's remove 
+all rows that have a 0 value for steps and redo the summary.
+
+```{r}
+echo=TRUE
+rm0_df <- raw_df %>%
+  filter(steps != 0)
+```
+
+```{r}
+echo=TRUE
+summary(rm0_df$steps, rm.na=TRUE)
+```
+
+
+We can now draw a histogram using base plotting
+```{r}
+echo=TRUE
+hist(rm0_df$steps, 
+     xlab = "Steps",
+     main = "Distribution of steps",
+     breaks = sqrt(nrow(raw_df)),
+     rm.na=TRUE
+)
+```
+
+The histogram seems to show that most 5 minute intervals have a low number
+of steps and few have a high number up towards 800.  Performing 800 steps in 
+a single 5 minute interval is probably a strenuous exercise period, but not 
+out of the range of possibility and there are data points in the 600-800 range
+so these higher values don't appear to be high outliers. 
+
+To calculate the total number of steps taken per day, we can group by day and 
+redo the histogram
+```{r}
+daily_df <- rm0_df %>%
+  group_by(date) %>%
+  summarise(daily_steps = sum(steps))
+```
+
+```{r}
+hist(daily_df$daily_steps,
+     xlab="Number of Steps/Day",
+     ylab="Count",
+     main="Histogram of steps per day")
+```
+
+
+
+
