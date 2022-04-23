@@ -65,7 +65,9 @@ histogram.  Let us start with a summary:
 
 ```{r}
 echo = TRUE
-summary(raw_df$steps, rm.na=TRUE)
+raw_df <- na.omit(raw_df)
+raw_df$date < as.Date(raw_df$date)
+summary(raw_df$steps)
 ```
 
 It seems that there are a lot of 0 values, if the median is 0.  Let's remove 
@@ -103,12 +105,14 @@ so these higher values don't appear to be high outliers.
 To calculate the total number of steps taken per day, we can group by day and 
 redo the histogram
 ```{r}
+echo=TRUE
 daily_df <- rm0_df %>%
   group_by(date) %>%
   summarise(daily_steps = sum(steps))
 ```
 
 ```{r}
+echo=TRUE
 hist(daily_df$daily_steps,
      xlab="Number of Steps/Day",
      ylab="Count",
@@ -118,11 +122,41 @@ Given this data, the next task is to calculate and report the mean and median of
 the total number of steps taken per day
 
 ```{r}
+echo=TRUE
 mean_steps <- mean(daily_df$daily_steps)
 med_steps <- median(daily_df$daily_steps)
 print(paste0("The mean number of steps per day is ", mean_steps, " and the median number of steps per day is ", med_steps))
 ```
 
+Now that we have a basic idea of the data, we ask "What is the average daily 
+activity pattern?"
+
+To answer this, we will make a time series plot (i.e. \color{red}{\verb|type = "l"|}type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis).  Start by grouping by interval and 
+computing the average for each interval
+
+```{r}
+echo=TRUE
+int_avg_df <- raw_df %>% 
+  group_by(interval) %>%
+  summarize(AvgSteps=mean(steps))
+```
+
+Now to create the plot
+```{r}
+echo=TRUE
+plot(int_avg_df$interval, int_avg_df$AvgSteps,
+     type = "l",
+     xlab="Interval",
+     ylab="Avg steps taken",
+     main="Average steps taken per 5 min interval")
+```
 
 
+Now we want know which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+
+```{r}
+echo=TRUE
+max_steps <- int_avg_df$interval[which.max(int_avg_df$AvgSteps)]
+print(paste0("The interval with the maximum number of steps is ", max_steps))
+```
 
