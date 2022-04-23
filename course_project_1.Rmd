@@ -41,8 +41,7 @@ download.file(fileUrl, dest)
 #unzip the file
 unzip(dest, exdir="./data")
 
-print('Data retrieved from ', fileUrl)
-print('at ', Sys.time())
+print(paste0('Data retrieved from ', fileUrl, ' at ', Sys.time()))
 
 ```
 
@@ -114,6 +113,14 @@ hist(daily_df$daily_steps,
      xlab="Number of Steps/Day",
      ylab="Count",
      main="Histogram of steps per day")
+```
+Given this data, the next task is to calculate and report the mean and median of
+the total number of steps taken per day
+
+```{r}
+mean_steps <- mean(daily_df$daily_steps)
+med_steps <- median(daily_df$daily_steps)
+print(paste0("The mean number of steps per day is ", mean_steps, " and the median number of steps per day is ", med_steps))
 ```
 
 
