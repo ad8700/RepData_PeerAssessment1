@@ -66,7 +66,7 @@ histogram.  Let us start with a summary:
 ```{r}
 echo = TRUE
 no_na_df <- na.omit(raw_df)
-no_na_df$date < as.Date(no_na_df$date)
+no_na_df$date <- as.Date(no_na_df$date)
 summary(no_na_df$steps)
 ```
 
@@ -209,15 +209,44 @@ hist(filled_by_day$TotalSteps,
 Now we want to calculate and report the mean and median total number of steps taken per day
 ```{r}
 echo=TRUE
+filled_mean_steps <- mean(filled_by_day$TotalSteps)
+filled_med_steps <- mean(filled_by_day$TotalSteps)
+print(paste0("The mean number of steps when values are imputed is ", filled_mean_steps, " and the median number of steps when values are imputed is ", filled_med_steps))
+```
+
+The mean number of steps is unchanged because all the NAs only took the mean value
+which would result in no change to the mean.  The median is now the mean value, 
+again because of the imputation.
+
+
+**Are there differences in activity patterns between weekdays and weekends?**
+For this part the \color{red}{\verb|weekdays()|}weekdays() function may be of some help here. Use the dataset with the filled-in missing values for this part.
+
+We will create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
+```{r}
+echo=TRUE
+filled_df$date <- as.Date(filled_df$date)
+filled_df$day <- weekdays(filled_df$date)
+#label Sat & Sun as weekend & all other days as weekday
+filled_df$daytype <- "weekday"
+filled_df$daytype[filled_df$day %in% c("Saturday", "Sunday")] <- "weekend"
 ```
 
 
+Make a panel plot containing a time series plot (i.e. \color{red}{\verb|type = "l"|}type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data.
 
-Do these values differ from the estimates from the first part of the assignment?
+```{r}
+echo=TRUE
+dayaverage <- filled_df %>%
+  group_by(daytype, interval) %>%
+  summarize(AvgSteps = mean(steps))
 
-
-
-What is the impact of imputing missing data on the estimates of the total daily 
-number of steps?
-
+qplot(interval, AvgSteps, data=dayaverage,
+      type="l",
+      geom="line",
+      xlab="Interval",
+      ylab="Average steps",
+      main="Time series of steps, weekend vs weekday",
+      facets = daytype ~.)
+```
 
