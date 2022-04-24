@@ -1,7 +1,9 @@
 ---
 title: "Course Project 1"
-output: html_notebook
-author: Andy Domenico
+author: "Andy Domenico"
+output:
+  html_document:
+    df_print: paged
 course: Reproducible Research
 ---
 
