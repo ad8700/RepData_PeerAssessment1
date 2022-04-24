@@ -65,17 +65,16 @@ histogram.  Let us start with a summary:
 
 ```{r}
 echo = TRUE
-raw_df <- na.omit(raw_df)
-raw_df$date < as.Date(raw_df$date)
-summary(raw_df$steps)
+no_na_df <- na.omit(raw_df)
+no_na_df$date < as.Date(no_na_df$date)
+summary(no_na_df$steps)
 ```
 
-It seems that there are a lot of 0 values, if the median is 0.  Let's remove 
-all rows that have a 0 value for steps and redo the summary.
+It seems that there are a lot of 0 values, especially if the median is 0.  Let's remove all rows that have a 0 value for steps and redo the summary.
 
 ```{r}
 echo=TRUE
-rm0_df <- raw_df %>%
+rm0_df <- no_na_df %>%
   filter(steps != 0)
 ```
 
@@ -91,7 +90,7 @@ echo=TRUE
 hist(rm0_df$steps, 
      xlab = "Steps",
      main = "Distribution of steps",
-     breaks = sqrt(nrow(raw_df)),
+     breaks = sqrt(nrow(rm0_df)),
      rm.na=TRUE
 )
 ```
@@ -136,7 +135,7 @@ computing the average for each interval
 
 ```{r}
 echo=TRUE
-int_avg_df <- raw_df %>% 
+int_avg_df <- no_na_df %>% 
   group_by(interval) %>%
   summarize(AvgSteps=mean(steps))
 ```
@@ -159,4 +158,66 @@ echo=TRUE
 max_steps <- int_avg_df$interval[which.max(int_avg_df$AvgSteps)]
 print(paste0("The interval with the maximum number of steps is ", max_steps))
 ```
+**Imputing missing values**
+
+Note that there are a number of days/intervals where there are missing values (coded as \color{red}{\verb|NA|}NA). The presence of missing days may introduce bias into some calculations or summaries of the data.
+
+We want to calculate and report the total number of missing values in the dataset (i.e. the total number of rows with \color{red}{\verb|NA|}NAs)
+
+```{r}
+echo=TRUE
+num_nas <- colSums(is.na(raw_df))
+print(paste0("The number of NAs in the data is ", num_nas))
+```
+
+
+Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
+
+The strategy we will use here is to iterate over all the rows and find the index
+value where the interval matches the average (computed above when we got the mean
+for each five minute interval), then take that value and replace the NAs with that value.  We see from the above step that NA only exists in the'steps' column, so 
+that's the only one we need to be concerned with.
+
+Create a new dataset that is equal to the original dataset but with the missing data filled in.
+
+```{r}
+echo=TRUE
+filled_df <- raw_df
+for (i in 1:nrow(filled_df)) {
+  if(is.na(filled_df$steps[i])) {
+    index_avg <- which(filled_df$interval[i] == int_avg_df$interval)
+    filled_df$steps[i] <- int_avg_df[index_avg,]$AvgSteps
+  }
+}
+```
+
+
+Let's make a histogram of the total number of steps taken each day
+
+```{r}
+echo=TRUE
+filled_by_day <- filled_df %>%
+  group_by(date) %>%
+  summarize(TotalSteps=sum(steps))
+
+hist(filled_by_day$TotalSteps,
+     xlab="Total steps taken per day",
+     ylab="Count",
+     main="Histogram of the total number of steps taken each day")
+```
+
+Now we want to calculate and report the mean and median total number of steps taken per day
+```{r}
+echo=TRUE
+```
+
+
+
+Do these values differ from the estimates from the first part of the assignment?
+
+
+
+What is the impact of imputing missing data on the estimates of the total daily 
+number of steps?
+
 
